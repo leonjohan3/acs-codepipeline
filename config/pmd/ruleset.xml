@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+
+<ruleset name="Custom Rules"
+  xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+  <description>
+    Activated PMD rules and exclusions. See: https://docs.pmd-code.org/pmd-doc-7.2.0/pmd_userdocs_making_rulesets.html
+  </description>
+
+  <!--  <rule ref="category/java/errorprone.xml/EmptyCatchBlock"/>-->
+  <exclude-pattern>.*/com/myorg/.*</exclude-pattern>
+  <include-pattern>.*/com/myorg/ConfigRootF.*</include-pattern>
+
+  <rule ref="category/java/bestpractices.xml">
+    <exclude name="JUnitAssertionsShouldIncludeMessage"/>
+    <exclude name="JUnitTestContainsTooManyAsserts"/>
+  </rule>
+
+  <rule ref="category/java/codestyle.xml/LongVariable">
+    <properties>
+      <property name="minimum" value="24"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/design.xml/CognitiveComplexity">
+    <properties>
+      <property name="reportLevel" value="18"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/codestyle.xml">
+    <exclude name="UseExplicitTypes"/>
+    <!--    <exclude name="ShortVariable"/>-->
+    <!--    <exclude name="LongVariable"/>-->
+    <exclude name="AtLeastOneConstructor"/>
+    <!--    <exclude name="CommentDefaultAccessModifier"/>-->
+    <exclude name="TooManyStaticImports"/>
+  </rule>
+
+  <rule ref="category/java/design.xml">
+    <!--    <exclude name="LawOfDemeter"/>-->
+    <exclude name="LoosePackageCoupling"/>
+  </rule>
+
+  <!--  <rule ref="category/java/documentation.xml"/>-->
+  <rule ref="category/java/errorprone.xml"/>
+  <rule ref="category/java/multithreading.xml"/>
+  <rule ref="category/java/performance.xml"/>
+  <rule ref="category/java/security.xml"/>
+
+</ruleset>
