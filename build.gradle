@@ -1,0 +1,64 @@
+plugins {
+    id 'application'
+    id "io.freefair.lombok" version "8.6"
+    id "pmd"
+    id 'checkstyle'
+    id "com.github.spotbugs" version "6.0.15"
+    id "org.sonarqube" version "5.0.0.4638"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    implementation 'software.amazon.awscdk:aws-cdk-lib:2.143.0'
+    implementation 'software.constructs:constructs:10.3.0'
+
+    implementation 'org.apache.commons:commons-lang3:3.14.0'
+
+    implementation platform('org.springframework.boot:spring-boot-dependencies:3.3.1')
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-freemarker'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+application {
+    mainClass = 'org.example.AcsCodePipelineCdkApp'
+}
+
+pmd {
+    consoleOutput = true
+    toolVersion = "7.2.0"
+    ruleSetFiles = files("config/pmd/ruleset.xml")
+}
+
+checkstyle {
+    toolVersion = "10.17.0"
+}
+
+tasks.withType(Checkstyle).configureEach {
+    reports {
+        xml.required = false
+        html.required = true
+    }
+    maxErrors = 1
+    maxWarnings = 1
+}
+
+spotbugsMain {
+    reports {
+        html {
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs/main/spotbugs.html")
+            stylesheet = 'fancy-hist.xsl'
+        }
+    }
+}

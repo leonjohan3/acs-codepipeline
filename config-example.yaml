@@ -1,0 +1,12 @@
+configuration-group-prefix: acs
+
+# e.g. https://github.com/projectdiscovery/nuclei-templates, will use `projectdiscovery` below
+github-repo-owner: ???
+
+source-github-repo-name: application-configuration-store
+source-github-repo-branch: main
+
+cicd-github-repo-name: application-configuration-store-cicd
+cicd-github-repo-branch: main
+
+manual-approval-notify-email: firstname.lastname@gmail.com
