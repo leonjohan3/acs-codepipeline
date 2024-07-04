@@ -10,8 +10,8 @@
   </description>
 
   <!--  <rule ref="category/java/errorprone.xml/EmptyCatchBlock"/>-->
-  <exclude-pattern>.*/com/myorg/.*</exclude-pattern>
-  <include-pattern>.*/com/myorg/ConfigRootF.*</include-pattern>
+  <!--  <exclude-pattern>.*/com/myorg/.*</exclude-pattern>-->
+  <!--  <include-pattern>.*/com/myorg/ConfigRootF.*</include-pattern>-->
 
   <rule ref="category/java/bestpractices.xml">
     <exclude name="JUnitAssertionsShouldIncludeMessage"/>
@@ -27,6 +27,12 @@
   <rule ref="category/java/design.xml/CognitiveComplexity">
     <properties>
       <property name="reportLevel" value="18"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/design.xml/ExcessiveImports">
+    <properties>
+      <property name="minimum" value="45" />
     </properties>
   </rule>
 

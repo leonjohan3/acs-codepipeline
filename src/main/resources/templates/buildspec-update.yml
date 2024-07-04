@@ -1,0 +1,39 @@
+version: 0.2
+
+env:
+  variables:
+    SAM_CLI_TELEMETRY: 0
+    TZ: Australia/Sydney
+    APP_CONFIG_GROUP_PREFIX: ${configGroupPrefix}
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto21.x
+    commands:
+      - ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
+      - echo $TZ > /etc/timezone
+      - date
+      - npm install -g aws-cdk@2
+
+  build:
+    commands:
+      - date
+      - mkdir -p $HOME/.gradle
+      - echo 'org.gradle.console=plain' > $HOME/.gradle/gradle.properties
+      - echo 'org.gradle.daemon=false' >> $HOME/.gradle/gradle.properties
+      - cd $CODEBUILD_SRC_DIR_Artifact_Checkout_Source_GitHub_CI_CD_Source
+      # - cdk --no-color --ci --require-approval=never deploy
+      # - date
+      # - cd build/distributions
+      # - tar -xf application-configuration-store-cicd.tar
+      # - cd $CODEBUILD_SRC_DIR_Artifact_Checkout_Source_GitHub_CI_CD_Source
+      # - java -Dapp.config.root.config.folder=$CODEBUILD_SRC_DIR -Dapp.config.group.prefix=$APP_CONFIG_GROUP_PREFIX -cp "build/distributions/application-configuration-store-cicd/lib/*" org.example.UpdateConfigProfile
+      # - date
+      # - java -Dapp.config.group.prefix=$APP_CONFIG_GROUP_PREFIX -cp "build/distributions/application-configuration-store-cicd/lib/*" org.example.DeployConfigProfile
+
+cache:
+  paths:
+    - '/root/.gradle/**/*'
+    - '/root/.npm/**/*'
+    - '/root/.cdk/**/*'

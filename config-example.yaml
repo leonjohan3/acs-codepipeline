@@ -1,0 +1,11 @@
+configuration-group-prefix: acs
+
+github-repo-owner: leonjohan3
+
+source-github-repo-name: application-configuration-store
+source-github-repo-branch: main
+
+cicd-github-repo-name: application-configuration-store-cicd
+cicd-github-repo-branch: feature/initial-impl
+
+manual-approval-notify-email: leonjohan3@gmail.com

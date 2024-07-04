@@ -1,7 +1,19 @@
-package com.myorg;
+package org.example;
 
+import static java.nio.charset.Charset.defaultCharset;
+
+import freemarker.template.Configuration;
+import freemarker.template.TemplateException;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import lombok.SneakyThrows;
 import software.amazon.awscdk.Duration;
 import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.SecretValue;
@@ -24,6 +36,7 @@ import software.amazon.awscdk.services.codepipeline.actions.GitHubSourceAction;
 import software.amazon.awscdk.services.codepipeline.actions.GitHubTrigger;
 import software.amazon.awscdk.services.codepipeline.actions.ManualApprovalAction;
 import software.amazon.awscdk.services.iam.PolicyStatement;
+import software.amazon.awscdk.services.logs.ILogGroup;
 import software.amazon.awscdk.services.logs.LogGroup;
 import software.amazon.awscdk.services.logs.RetentionDays;
 import software.amazon.awscdk.services.s3.Bucket;
@@ -35,15 +48,16 @@ public final class AcsCodePipelineCdkStack extends Stack {
     private static final String BUILD_IMAGE_ID = "aws/codebuild/amazonlinux2-x86_64-standard:5.0";
     private static final String STS_ASSUME_ROLE = "sts:AssumeRole";
     private static final String ARN_AWS_IAM = "arn:aws:iam::";
+    private static final String TEMPLATES_FOLDER = "src/main/resources/templates/";
 
-    public AcsCodePipelineCdkStack(final Construct scope, final String id, final StackProps props) {
-        super(scope, id, props);
+    public AcsCodePipelineCdkStack(final Construct scope, final String identity, final StackProps props, final AcsConfiguration acsConfiguration) {
+        super(scope, identity, props);
 
         final var codePipelineBucket = Bucket.Builder.create(this, "TheCodePipelineBucket")
             .removalPolicy(RemovalPolicy.DESTROY)
             .autoDeleteObjects(true)
             .lifecycleRules(List.of(LifecycleRule.builder()
-                .expiration(Duration.days(7))
+                .expiration(Duration.days(14))
                 .build()))
             .build();
 
@@ -61,9 +75,9 @@ public final class AcsCodePipelineCdkStack extends Stack {
             .actionName("GitHub_Source")
             .output(sourceOutput)
             .oauthToken(SecretValue.secretsManager("github-token"))
-            .owner("leonjohan3")
-            .repo("application-configuration-store")
-            .branch("main")
+            .owner(acsConfiguration.githubRepoOwner())
+            .repo(acsConfiguration.sourceGithubRepoName())
+            .branch(acsConfiguration.sourceGithubRepoBranch())
             .build();
 
         final var cicdSourceAction = GitHubSourceAction.Builder.create()
@@ -71,9 +85,9 @@ public final class AcsCodePipelineCdkStack extends Stack {
             .trigger(GitHubTrigger.NONE)
             .output(cicdSourceOutput)
             .oauthToken(SecretValue.secretsManager("github-token"))
-            .owner("leonjohan3")
-            .repo("application-configuration-store-cicd")
-            .branch("feature/initial-impl")
+            .owner(acsConfiguration.githubRepoOwner())
+            .repo(acsConfiguration.cicdGithubRepoName())
+            .branch(acsConfiguration.cicdGithubRepoBranch())
             .build();
 
         codePipeline.addStage(StageOptions.builder()
@@ -81,28 +95,14 @@ public final class AcsCodePipelineCdkStack extends Stack {
             .actions(List.of(cicdSourceAction, sourceAction))
             .build());
 
-        final var diffCodeBuildLogGroup = LogGroup.Builder.create(this, "TheDiffCodeBuildLogGroup")
-            .retention(RetentionDays.ONE_WEEK)
-            .removalPolicy(RemovalPolicy.DESTROY)
-            .build();
+        populateBuildspecFilesWithGroupPrefix(acsConfiguration.configurationGroupPrefix());
 
-        final var diffCodeBuild = PipelineProject.Builder.create(this, "TheDiffCodeBuild")
-            .environment(BuildEnvironment.builder()
-                .buildImage(LinuxBuildImage.fromCodeBuildImageId(BUILD_IMAGE_ID))
-                .build())
-            .timeout(Duration.minutes(15))
-            .grantReportGroupPermissions(false)
-            .buildSpec(BuildSpec.fromSourceFilename("buildspec-diff.yml"))
-            .concurrentBuildLimit(1)
-            .queuedTimeout(Duration.minutes(5))
-            .description("Display planned AppConfig updates in build log")
-            .cache(Cache.local(LocalCacheMode.DOCKER_LAYER, LocalCacheMode.CUSTOM, LocalCacheMode.SOURCE))
-            .logging(LoggingOptions.builder()
-                .cloudWatch(CloudWatchLoggingOptions.builder()
-                    .logGroup(diffCodeBuildLogGroup)
-                    .build())
-                .build())
-            .build();
+        final var diffCodeBuildLogGroup = createCodeBuildLogGroup("TheDiffCodeBuildLogGroup");
+
+        final var diffCodeBuild = createCodeBuild("TheDiffCodeBuild",
+            "buildspec-diff.yml",
+            "Display planned AppConfig updates in build log",
+            diffCodeBuildLogGroup);
 
         final var diffCodeBuildRole = diffCodeBuild.getRole();
 
@@ -132,7 +132,7 @@ public final class AcsCodePipelineCdkStack extends Stack {
 
         final var approvalAction = ManualApprovalAction.Builder.create()
             .actionName("Approve_Deploy")
-            .notifyEmails(List.of("leonjohan3@gmail.com"))
+            .notifyEmails(List.of(acsConfiguration.approvalNotifyEmail()))
             .additionalInformation("Please review the planned changes. Click on the 'View details' of the 'Get_Diffs' stage above")
             .build();
 
@@ -141,28 +141,12 @@ public final class AcsCodePipelineCdkStack extends Stack {
             .actions(List.of(approvalAction))
             .build());
 
-        final var updateCodeBuildLogGroup = LogGroup.Builder.create(this, "TheUpdateCodeBuildLogGroup")
-            .retention(RetentionDays.ONE_WEEK)
-            .removalPolicy(RemovalPolicy.DESTROY)
-            .build();
+        final var updateCodeBuildLogGroup = createCodeBuildLogGroup("TheUpdateCodeBuildLogGroup");
 
-        final var updateCodeBuild = PipelineProject.Builder.create(this, "TheUpdateCodeBuild")
-            .environment(BuildEnvironment.builder()
-                .buildImage(LinuxBuildImage.fromCodeBuildImageId(BUILD_IMAGE_ID))
-                .build())
-            .timeout(Duration.minutes(15))
-            .grantReportGroupPermissions(false)
-            .buildSpec(BuildSpec.fromSourceFilename("buildspec-update.yml"))
-            .concurrentBuildLimit(1)
-            .queuedTimeout(Duration.minutes(5))
-            .description("Deploy planned AppConfig updates")
-            .cache(Cache.local(LocalCacheMode.DOCKER_LAYER, LocalCacheMode.CUSTOM, LocalCacheMode.SOURCE))
-            .logging(LoggingOptions.builder()
-                .cloudWatch(CloudWatchLoggingOptions.builder()
-                    .logGroup(updateCodeBuildLogGroup)
-                    .build())
-                .build())
-            .build();
+        final var updateCodeBuild = createCodeBuild("TheUpdateCodeBuild",
+            "buildspec-update.yml",
+            "Deploy planned AppConfig updates",
+            updateCodeBuildLogGroup);
 
         final var updateCodeBuildRole = updateCodeBuild.getRole();
 
@@ -187,5 +171,57 @@ public final class AcsCodePipelineCdkStack extends Stack {
             .stageName("Update_Diffs")
             .actions(List.of(updateBuildAction))
             .build());
+    }
+
+    @SneakyThrows
+    private void populateBuildspecFilesWithGroupPrefix(final String configurationGroupPrefix) {
+
+        final var cfg = new Configuration(Configuration.VERSION_2_3_33);
+        cfg.setDirectoryForTemplateLoading(new File(TEMPLATES_FOLDER));
+        final var root = new HashMap<String, Object>();
+        root.put("configGroupPrefix", configurationGroupPrefix);
+
+        try (var templateFiles = Files.walk(Path.of(TEMPLATES_FOLDER), 1)) {
+            templateFiles.filter(path -> path.toFile().isFile()).forEach(path -> {
+                try {
+                    final var template = cfg.getTemplate(path.getFileName().toString());
+
+                    try (var out = new OutputStreamWriter(Files.newOutputStream(Path.of("build", path.getFileName().toString())), defaultCharset())) {
+                        template.process(root, out);
+                    }
+                } catch (IOException e) {
+                    throw new UncheckedIOException(path.toString(), e);
+                } catch (TemplateException e) {
+                    throw new IllegalStateException(e);
+                }
+            });
+        }
+    }
+
+    private LogGroup createCodeBuildLogGroup(final String identity) {
+        return LogGroup.Builder.create(this, identity)
+            .retention(RetentionDays.TWO_WEEKS)
+            .removalPolicy(RemovalPolicy.DESTROY)
+            .build();
+    }
+
+    private PipelineProject createCodeBuild(final String identity, final String buildSpecFilename, final String description, final ILogGroup logGroup) {
+        return PipelineProject.Builder.create(this, identity)
+            .environment(BuildEnvironment.builder()
+                .buildImage(LinuxBuildImage.fromCodeBuildImageId(BUILD_IMAGE_ID))
+                .build())
+            .timeout(Duration.minutes(15))
+            .grantReportGroupPermissions(false)
+            .buildSpec(BuildSpec.fromAsset("build/" + buildSpecFilename))
+            .concurrentBuildLimit(1)
+            .queuedTimeout(Duration.minutes(5))
+            .description(description)
+            .cache(Cache.local(LocalCacheMode.DOCKER_LAYER, LocalCacheMode.CUSTOM, LocalCacheMode.SOURCE))
+            .logging(LoggingOptions.builder()
+                .cloudWatch(CloudWatchLoggingOptions.builder()
+                    .logGroup(logGroup)
+                    .build())
+                .build())
+            .build();
     }
 }
