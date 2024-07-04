@@ -77,7 +77,7 @@ much sense at this time, but it is an important concept to be aware of, so make 
 The configuration (e.g. application.yaml) is now available in AWS AppConfig, but how does the microservice/application get to use it?
 A standalone executable is available to fetch the latest config from AppConfig using the application name and environment (e.g. prod, dev, test).
 The executable is implemented in golang and needs to be built, uploaded to the Docker image (if using Docker) and run in the microservice/application
-startup script, see: [getLatestConfig executable](<https://github.com/leonjohan3/application-configuration-store-cicd/tree/feature/initial-impl/getLatestConfig>)
+startup script, see: [getLatestConfig executable](<https://github.com/leonjohan3/application-configuration-store-cicd/tree/main/getLatestConfig>)
 
 # How to deal with sensitive config like DB passwords, private keys, etc.
 The simplest way to keep these out of your GitHub repo, is to store them in AWS Secrets, and then use Spring Cloud AWS
