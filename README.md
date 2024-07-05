@@ -1,5 +1,6 @@
 # Overview
-AWS cdk project to create an AWS CodePipeline and related resources for deploying an "application-configuration-store" GitHub repo using "application-configuration-store-cicd"
+A solution that allows developers to store the Spring externalized configuration (application.yaml or .properties) in a GutHub repo that automatically gets
+sync'ed to AWS AppConfig.
 
 # Background
 The twelve-factor app principles recommend strict separation of config from code because config could vary substantially across deploys/environments, 
@@ -11,7 +12,7 @@ stored in a GitHub repo (unrelated to the source code) that is synchronized to A
 
 It provides a central place to manage external properties or configuration for applications across all environments.
 
-The desired configuration is later retrieved from AWS AppConfig when the microservice/application is started/re-started.
+The latest configuration for the specific application and environment is later retrieved from AWS AppConfig when the microservice/application is started/re-started.
 
 When deploying a Spring Boot microservice/application on AWS, and using e.g. the AppConfig agent as a source for the config, one cannot make use of the rich 
 functionality provided by the Spring Boot [Externalized Configuration](<https://docs.spring.io/spring-boot/reference/features/external-config.html>), but
@@ -31,7 +32,7 @@ much sense at this time, but it is an important concept to be aware of, so make 
 - [application-configuration-store](<https://github.com/leonjohan3/application-configuration-store/blob/main/README.md>)
 - [application-configuration-store-cicd](<https://github.com/leonjohan3/application-configuration-store-cicd/blob/main/README.md>)
 
-# How are the 3 GitHub repos related
+# How are the 3 GitHub repos related?
 ![How are the 3 GitHub repos related](https://github.com/leonjohan3/acs-codepipeline/blob/main/images/how-are-the-3-repos-related.png)
 
 # Getting started deploying to your AWS Account (below instructions suitable for AWS CloudShell)
@@ -41,14 +42,14 @@ much sense at this time, but it is an important concept to be aware of, so make 
 2. Clone the new `acs-codepipeline` repo on your local disk
 3. Install the AWS CLI (see resources section below) - might already be installed.
 4. Configure your environment making sure it is pointing to the correct AWS account and region (the easiest will be to give the AWS user 
-   temporary full AWS admin-like access for this install). The AWS CodePipeline project uses roles with minimum access created by this install to deploy 
-   the configs to AppConfig.
+   temporary full AWS admin-like access for this install). The AWS CodePipeline (to deploy the configs to AppConfig) uses roles with least privileges
+   created by this install.
 5. Run the following commands to ensure the defaults are correct:
    `aws sts get-caller-identity`  (to get the current AWS account number), and
    `aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]'`  (to get the current region)
 6. Install Java 21: `sudo yum install java-21-amazon-corretto-devel`
 7. Install Node.js (version 14.15.0 or later) - might already be installed
-8. Install AWS cdk cli: `npm install -g aws-cdk@2`
+8. Install AWS cdk cli: `sudo npm install -g aws-cdk@2`
 9. Bootstrap the AWS cdk (if you have not done this before - see resources below), run: `cdk bootstrap`
 10. Edit the `config-example.yaml` replacing the current values with what is relevant for your environment. The `configuration-group-prefix` can remain as is for 
     now.
@@ -92,19 +93,54 @@ spring:
 datasource:
   password: ${first-secret}
 ```
+
 # What are the benefits of using this solution over [Spring Cloud Config](<https://docs.spring.io/spring-cloud-config/reference/>)
 1. The AWS AppConfig service is serverless and managed by AWS.
 2. The costs should be less, as there is no Spring Boot application required to serve the config that needs to be hosted on ECS/EKS/EC2.
 3. This solution is more robust as there is less moving parts and points of possible failure.
 
 # What are the AWS cost for using this solution?
-- With AWS AppConfig, you pay each time you request configuration data from AWS AppConfig via API calls, as well as each time your requesting target receives 
-  configuration data in response to that request (every time your microservice/application starts or re-starts). At the time of writing this was US$0.0008 each
-  time the config is fetched from AppConfig. E.g. if you have 200 microservices/applications re-starting 3 times a day: 200 x 3 x $0.0008 x 30days
-  = US$14.40 per month.
+- With AWS AppConfig, you pay each time you request configuration data from AWS AppConfig via API calls (every time your microservice/application starts 
+  or re-starts). At the time of writing this was US$0.0008 each time the config is fetched from AppConfig. E.g. if you have 200 microservices/applications 
+  re-starting 3 times a day: 200 x 3 x $0.0008 x 30days = US$14.40 per month.
 - There is also a cost associated with the AWS CodeBuild when the CodePipeline needs to sync the GitHub repo with AppConfig: it is based on build duration, and 
   at the time of writing, US$0.005 per minute (with 100 build minutes free per month when on the free tier). E.g. when a pipeline runs 10 times a day and takes 
   on average 10 minutes to perform the deploy, the costs are 10 x 10 x $0.005 x 30days = US$15.00 per month.
+
+# AWS Technologies used
+1. Secret Manager
+2. S3
+3. AppConfig
+4. Cloudwatch
+5. cdk (that uses Cloudformation behind the scenes)
+6. CodePipeline and CodeBuild
+7. SNS
+8. IAM
+
+# FAQ
+1. Why was Java selected to implement the AWS cdk code (and not Python or Node) ?
+
+   Because the solution is predominantly aimed at Java Spring Boot developers, it would be easier for them to maintain the IaC in a language familiar to them.
+2. Is it possible to use application or environment names that only differ in case? E.g. using application names `sales-api` and `sales-API` ?
+
+   No, this is not permitted by AWS rules and will generate an error.
+3. Why was AWS CodePipeline and not GitHub Actions used to implement the CI/CD steps?
+
+   AWS cdk could be used to create the AWS CodePipeline, and CodePipeline integrates much easier with the other AWS services and supports roles using least 
+   privilege. 
+4. Why is there a manual approval step?
+
+   Configuration changes, when specified incorrectly, could cause downtime. This additional QA step was introduced to ensure we only deploy configuration changes
+   we intend to.
+5. Why is this solution not available as a working program? Why does the GitHub repos need to be duplicated before it can be used?
+
+   Every organisation/team might use the solution differently, making slight changes as they need. E.g. disabling the manual approval step in the non-prod
+   environments (which requires a code change). It is also important for the team to not treat this solution as a black box, but to understand the code and 
+   how everything fits together, as this will greatly assist in future troubleshooting.
+6. I am done playing around. How do I clean up all resources to ensure there are no AWS charges?
+
+   Locate the stacks created in AWS Cloudformation, disable termination protection, and delete the stacks. To re-create deleted stacks, just follow 
+   the "Getting started" instructions above.
 
 # Resources
 - [What is AWS AppConfig](<https://docs.aws.amazon.com/appconfig/latest/userguide/what-is-appconfig.html>)
@@ -119,3 +155,4 @@ datasource:
 - [Spring Boot Externalized Configuration](<https://docs.spring.io/spring-boot/reference/features/external-config.html>)
 - [Spring Cloud Config](<https://docs.spring.io/spring-cloud-config/reference/>)
 - [Spring Cloud AWS](<https://docs.awspring.io/spring-cloud-aws/docs/3.0.0/reference/html/index.html#spring-cloud-aws-secrets-manager>)
+- [AWS CodePipeline GitHub Actions - GitHub Token](<https://docs.aws.amazon.com/cdk/api/v2/java/software/amazon/awscdk/services/codepipeline/actions/package-summary.html#github-heading>)
