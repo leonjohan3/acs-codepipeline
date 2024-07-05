@@ -23,14 +23,14 @@ phases:
       - echo 'org.gradle.console=plain' > $HOME/.gradle/gradle.properties
       - echo 'org.gradle.daemon=false' >> $HOME/.gradle/gradle.properties
       - cd $CODEBUILD_SRC_DIR_Artifact_Checkout_Source_GitHub_CI_CD_Source
-      # - cdk --no-color --ci --require-approval=never deploy
-      # - date
-      # - cd build/distributions
-      # - tar -xf application-configuration-store-cicd.tar
-      # - cd $CODEBUILD_SRC_DIR_Artifact_Checkout_Source_GitHub_CI_CD_Source
-      # - java -Dapp.config.root.config.folder=$CODEBUILD_SRC_DIR -Dapp.config.group.prefix=$APP_CONFIG_GROUP_PREFIX -cp "build/distributions/application-configuration-store-cicd/lib/*" org.example.UpdateConfigProfile
-      # - date
-      # - java -Dapp.config.group.prefix=$APP_CONFIG_GROUP_PREFIX -cp "build/distributions/application-configuration-store-cicd/lib/*" org.example.DeployConfigProfile
+      - cdk --no-color --ci --require-approval=never deploy
+      - date
+      - cd build/distributions
+      - tar -xf application-configuration-store-cicd.tar
+      - cd $CODEBUILD_SRC_DIR_Artifact_Checkout_Source_GitHub_CI_CD_Source
+      - java -Dapp.config.root.config.folder=$CODEBUILD_SRC_DIR -Dapp.config.group.prefix=$APP_CONFIG_GROUP_PREFIX -cp "build/distributions/application-configuration-store-cicd/lib/*" org.example.UpdateConfigProfile
+      - date
+      - java -Dapp.config.group.prefix=$APP_CONFIG_GROUP_PREFIX -cp "build/distributions/application-configuration-store-cicd/lib/*" org.example.DeployConfigProfile
 
 cache:
   paths:
