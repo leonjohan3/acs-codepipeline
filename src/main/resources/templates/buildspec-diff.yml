@@ -23,6 +23,7 @@ phases:
       - echo 'org.gradle.console=plain' > $HOME/.gradle/gradle.properties
       - echo 'org.gradle.daemon=false' >> $HOME/.gradle/gradle.properties
       - cd $CODEBUILD_SRC_DIR_Artifact_Checkout_Source_GitHub_CI_CD_Source
+      - export APP_CONFIG_ROOT_CONFIG_FOLDER=$CODEBUILD_SRC_DIR
       - cdk --no-color --ci --require-approval=never diff
       - date
       - cd build/distributions
