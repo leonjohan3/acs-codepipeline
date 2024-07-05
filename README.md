@@ -1,5 +1,5 @@
 # Overview
-A solution that allows developers to store the Spring externalized configuration (application.yaml or .properties) in a GutHub repo that automatically gets
+A solution that allows developers to store the Spring externalized configuration (application.yaml or .properties) in a GitHub repo that automatically gets
 sync'ed to AWS AppConfig.
 
 # Background
