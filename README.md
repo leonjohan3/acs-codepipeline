@@ -40,22 +40,22 @@ much sense at this time, but it is an important concept to be aware of, so make 
    See [Duplicating a repository](<https://docs.github.com/en/repositories/creating-and-managing-repositories/duplicating-a-repository?platform=linux>) 
    on how to accomplish that. The new 3 repos will be unrelated/disconnected from the original repos and evolve on their own.
 2. Clone the new `acs-codepipeline` repo on your local disk
-3. Install the AWS CLI (see resources section below) - might already be installed.
-4. Configure your environment making sure it is pointing to the correct AWS account and region (the easiest will be to give the AWS user 
+3. Change directory to the root folder of the `acs-codepipeline` repo.
+4. Install the AWS CLI (see resources section below) - might already be installed.
+5. Configure your environment making sure it is pointing to the correct AWS account and region (the easiest will be to give the AWS user 
    temporary full AWS admin-like access for this install). The AWS CodePipeline (to deploy the configs to AppConfig) uses roles with least privileges
    created by this install.
-5. Run the following commands to ensure the defaults are correct:
+6. Run the following commands to ensure the defaults are correct:
    `aws sts get-caller-identity`  (to get the current AWS account number), and
    `aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]'`  (to get the current region)
-6. Install Java 21: `sudo yum install java-21-amazon-corretto-devel`
-7. Install Node.js (version 14.15.0 or later) - might already be installed
-8. Install AWS cdk cli: `sudo npm install -g aws-cdk@2`
-9. Bootstrap the AWS cdk (if you have not done this before - see resources below), run: `cdk bootstrap`
-10. Edit the `config-example.yaml` replacing the current values with what is relevant for your environment. The `configuration-group-prefix` can remain as is for 
+7. Install Java 21: `sudo yum install java-21-amazon-corretto-devel`
+8. Install Node.js (version 14.15.0 or later) - might already be installed
+9. Install AWS cdk cli: `sudo npm install -g aws-cdk@2`
+10. Bootstrap the AWS cdk (if you have not done this before - see resources below), run: `cdk bootstrap`
+11. Edit the `config-example.yaml` replacing the current values with what is relevant for your environment. The `configuration-group-prefix` can remain as is for 
     now.
-11. Create a GiHub personal access token (classic) with the following GitHub scopes: `repo` and `admin:repo_hook` - see resources below.
-12. Save this token as a "plaintext" secret in AWS Secret Manager under the name `github-token` 
-13. Change directory to the root folder of the `acs-codepipeline` repo.
+12. Create a GiHub personal access token (classic) with the following GitHub scopes: `repo` and `admin:repo_hook` - see resources below.
+13. Save this token as a "plaintext" secret in AWS Secret Manager under the name `github-token` 
 14. Run the following command: `cdk -c config-file-name=config-example.yaml diff`. This will display all the AWS resources (including the roles) that will be 
     created.
 15. Run the following command to deploy the AWS CodePipeline that will use the `application-configuration-store-cicd` repo to sync 
@@ -71,7 +71,7 @@ much sense at this time, but it is an important concept to be aware of, so make 
 22. Optionally create the GitHub repositories (similar to `application-configuration-store`) and then repeat this procedure as necessary to create the 
     AWS CodePipelines for the other teams/departments.
 
-# What does the completed AWS CodePipeline look like
+# What does the AWS CodePipeline look like
 ![What does the completed AWS CodePipeline look like](https://github.com/leonjohan3/acs-codepipeline/blob/main/images/what-does-the-completed-aws-codepipeline-look-like.png)
 
 # How to use the AppConfig configuration when deploying a microservice/application?
