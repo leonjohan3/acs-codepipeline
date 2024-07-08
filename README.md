@@ -94,7 +94,7 @@ spring:
 then:
 ```yaml
 datasource:
-  - password: ${first-secret}
+  password: ${first-secret}
 ```
 or:
 ```java
