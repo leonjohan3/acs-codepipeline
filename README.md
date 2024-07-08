@@ -164,4 +164,4 @@ private String mySecret;
 - [Spring Boot Externalized Configuration](<https://docs.spring.io/spring-boot/reference/features/external-config.html>)
 - [Spring Cloud Config](<https://docs.spring.io/spring-cloud-config/reference/>)
 - [Spring Cloud AWS](<https://docs.awspring.io/spring-cloud-aws/docs/3.0.0/reference/html/index.html#spring-cloud-aws-secrets-manager>)
-- [AWS CodePipeline GitHub Actions - GitHub Token](<https://docs.aws.amazon.com/cdk/api/v2/java/software/amazon/awscdk/services/codepipeline/actions/package-summary.html#github-heading>)
+- [AWS CodePipeline - GitHub Token](<https://docs.aws.amazon.com/cdk/api/v2/java/software/amazon/awscdk/services/codepipeline/actions/package-summary.html#github-heading>)
