@@ -111,6 +111,9 @@ public final class AcsCodePipelineCdkStack extends Stack {
                 PolicyStatement.Builder.create().actions(List.of(STS_ASSUME_ROLE))
                     .resources(List.of(ARN_AWS_IAM + getAccount() + ":role/cdk-*-lookup-role-*")).build());
             diffCodeBuildRole.addToPrincipalPolicy(
+                PolicyStatement.Builder.create().actions(List.of(STS_ASSUME_ROLE))
+                    .resources(List.of(ARN_AWS_IAM + getAccount() + ":role/cdk-*-deploy-role-*")).build());
+            diffCodeBuildRole.addToPrincipalPolicy(
                 PolicyStatement.Builder.create().actions(List.of("appconfig:Get*", "appconfig:List*"))
                     .resources(List.of("*")).build());
         }

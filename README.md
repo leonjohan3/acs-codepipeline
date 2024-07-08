@@ -85,14 +85,21 @@ startup script, see: [getLatestConfig executable](<https://github.com/leonjohan3
 The simplest way to keep these out of your GitHub repo, is to store them in AWS Secrets, and then use Spring Cloud AWS
 [Secrets Manager Integration](<https://docs.awspring.io/spring-cloud-aws/docs/3.0.0/reference/html/index.html#spring-cloud-aws-secrets-manager>)
 
-E.g.: `application.yaml`
+E.g.: when using a "plaintext" secret `application.yaml` with e.g. Spring profile set to `prod`
 ```yaml
 spring:
   config:
-    import: aws-secretsmanager:/my/first-secret;/my/second-secret
-
+    import: aws-secretsmanager:/my/${spring.profiles.active}/first-secret;/my/${spring.profiles.active}/second-secret
+```
+then:
+```yaml
 datasource:
-  password: ${first-secret}
+  - password: ${first-secret}
+```
+or:
+```java
+@Value("${first-secret}")
+private String mySecret;
 ```
 
 # What are the benefits of using this solution over [Spring Cloud Config](<https://docs.spring.io/spring-cloud-config/reference/>)
@@ -109,14 +116,15 @@ datasource:
   on average 10 minutes to perform the deploy, the costs are 10 x 10 x $0.005 x 30days = US$15.00 per month.
 
 # AWS Technologies used
-1. Secret Manager
+1. Secrets Manager
 2. S3
 3. AppConfig
 4. Cloudwatch
-5. cdk (that uses Cloudformation behind the scenes)
+5. cdk (that uses CloudFormation behind the scenes)
 6. CodePipeline and CodeBuild
 7. SNS
-8. IAM
+8. IAM roles and policies
+9. AWS SDK for Java
 
 # FAQ
 1. Why was Java selected to implement the AWS cdk code (and not Python or Node) ?
