@@ -130,26 +130,32 @@ private String mySecret;
 1. Why was Java selected to implement the AWS cdk code (and not Python or Node) ?
 
    Because the solution is predominantly aimed at Java Spring Boot developers, it would be easier for them to maintain the IaC in a language familiar to them.
-2. Is it possible to use application or environment names that only differ in case? E.g. using application names `sales-api` and `sales-API` ?
-
-   No, this is not permitted by AWS rules and will generate an error.
-3. Why was AWS CodePipeline and not GitHub Actions used to implement the CI/CD steps?
+2. Why was AWS CodePipeline and not GitHub Actions used to implement the CI/CD steps?
 
    AWS cdk could be used to create the AWS CodePipeline, and CodePipeline integrates much easier with the other AWS services and supports roles using least 
    privilege. 
-4. Why is there a manual approval step?
+3. Why is there a manual approval step?
 
    Configuration changes, when specified incorrectly, could cause downtime. This additional QA step was introduced to ensure we only deploy configuration changes
    we intend to.
-5. Why is this solution not available as a working program? Why does the GitHub repos need to be duplicated before it can be used?
+4. Why is this solution not available as a working program? Why does the GitHub repos need to be duplicated before it can be used?
 
    Every organisation/team might use the solution differently, making slight changes as they need. E.g. disabling the manual approval step in the non-prod
    environments (which requires a code change). It is also important for the team to not treat this solution as a black box, but to understand the code and 
    how everything fits together, as this will greatly assist in future troubleshooting.
-6. I am done playing around. How do I clean up all resources to ensure there are no AWS charges?
+5. I am done playing around. How do I clean up all resources to ensure there are no AWS charges?
 
    Locate the stacks created in AWS Cloudformation, disable termination protection, and delete the stacks. To re-create deleted stacks, just follow 
    the "Getting started" instructions above.
+6. When running in CloudShell, at times I get error: `Gradle build daemon disappeared unexpectedly (it may have been killed or may have crashed)`
+
+   This is suspected to be a memory issue with CloudShell, so just re-run the command until it finishes successfully. This only happens in the CloudShell console, 
+   and not in the pipeline build.
+7. The $HOME folder on CloudShell is only 1GB in size. How do I prevent running out of disk space?
+   The first step is to move the "caches" to the `/tmp` folder. Do this by adding the following line to your "$HOME/.gradle/gradle.properties":
+   `GRADLE_WRAPPER_DISTS_HOME=/tmp`. Additionally, and optionally, create a symlink from "$HOME/.cache" to "/tmp/.cache" then add the command `mkdir -p /tmp/.cache`
+   to the "$HOME/.bash_profile" (as this folder will not exist on newly provided CloudShell sessions). Only changes to your $HOME folder is persisted and made 
+   available in future CloudShell sessions.
 
 # Resources
 - [What is AWS AppConfig](<https://docs.aws.amazon.com/appconfig/latest/userguide/what-is-appconfig.html>)
