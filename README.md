@@ -132,7 +132,7 @@ private String mySecret;
    Because the solution is predominantly aimed at Java Spring Boot developers, it would be easier for them to maintain the IaC in a language familiar to them.
 2. Why was AWS CodePipeline and not GitHub Actions used to implement the CI/CD steps?
 
-   AWS cdk could be used to create the AWS CodePipeline, and CodePipeline integrates much easier with the other AWS services and supports roles using least 
+   The AWS cdk could be utilized to create the AWS CodePipeline, and CodePipeline integrates much easier with the other AWS services and supports roles using least 
    privilege. 
 3. Why is there a manual approval step?
 
@@ -149,13 +149,14 @@ private String mySecret;
    the "Getting started" instructions above.
 6. When running in CloudShell, at times I get error: `Gradle build daemon disappeared unexpectedly (it may have been killed or may have crashed)`
 
-   This is suspected to be a memory issue with CloudShell, so just re-run the command until it finishes successfully. This only happens in the CloudShell console, 
+   This is suspected to be a memory issue with CloudShell - re-run the command until it finishes successfully. This only happens in the CloudShell console, 
    and not in the pipeline build.
 7. The $HOME folder on CloudShell is only 1GB in size. How do I prevent running out of disk space?
+   
    The first step is to move the "caches" to the `/tmp` folder. Do this by adding the following line to your "$HOME/.gradle/gradle.properties":
    `GRADLE_WRAPPER_DISTS_HOME=/tmp`. Additionally, and optionally, create a symlink from "$HOME/.cache" to "/tmp/.cache" then add the command `mkdir -p /tmp/.cache`
-   to the "$HOME/.bash_profile" (as this folder will not exist on newly provided CloudShell sessions). Only changes to your $HOME folder is persisted and made 
-   available in future CloudShell sessions.
+   to the "$HOME/.bash_profile" (as this folder in "/tmp" will not exist on newly provided CloudShell sessions). Only changes to your $HOME folder is persisted 
+   and made available in future CloudShell sessions.
 
 # Resources
 - [What is AWS AppConfig](<https://docs.aws.amazon.com/appconfig/latest/userguide/what-is-appconfig.html>)
