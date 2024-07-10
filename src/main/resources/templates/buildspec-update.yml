@@ -32,9 +32,3 @@ phases:
       - java -Dapp.config.root.config.folder=$CODEBUILD_SRC_DIR -Dapp.config.group.prefix=$APP_CONFIG_GROUP_PREFIX -cp "build/distributions/application-configuration-store-cicd/lib/*" org.example.UpdateConfigProfile
       - date
       - java -Dapp.config.group.prefix=$APP_CONFIG_GROUP_PREFIX -cp "build/distributions/application-configuration-store-cicd/lib/*" org.example.DeployConfigProfile
-
-cache:
-  paths:
-    - '/root/.gradle/**/*'
-    - '/root/.npm/**/*'
-    - '/root/.cdk/**/*'

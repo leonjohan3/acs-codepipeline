@@ -21,10 +21,9 @@ import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;
 import software.amazon.awscdk.services.codebuild.BuildEnvironment;
 import software.amazon.awscdk.services.codebuild.BuildSpec;
-import software.amazon.awscdk.services.codebuild.Cache;
 import software.amazon.awscdk.services.codebuild.CloudWatchLoggingOptions;
-import software.amazon.awscdk.services.codebuild.LinuxBuildImage;
-import software.amazon.awscdk.services.codebuild.LocalCacheMode;
+import software.amazon.awscdk.services.codebuild.ComputeType;
+import software.amazon.awscdk.services.codebuild.LinuxArmBuildImage;
 import software.amazon.awscdk.services.codebuild.LoggingOptions;
 import software.amazon.awscdk.services.codebuild.PipelineProject;
 import software.amazon.awscdk.services.codepipeline.Artifact;
@@ -45,7 +44,7 @@ import software.constructs.Construct;
 
 public final class AcsCodePipelineCdkStack extends Stack {
 
-    private static final String BUILD_IMAGE_ID = "aws/codebuild/amazonlinux2-x86_64-standard:5.0";
+    private static final String BUILD_IMAGE_ID = "aws/codebuild/amazonlinux2-aarch64-standard:3.0";
     private static final String STS_ASSUME_ROLE = "sts:AssumeRole";
     private static final String ARN_AWS_IAM = "arn:aws:iam::";
     private static final String TEMPLATES_FOLDER = "src/main/resources/templates/";
@@ -211,7 +210,8 @@ public final class AcsCodePipelineCdkStack extends Stack {
     private PipelineProject createCodeBuild(final String identity, final String buildSpecFilename, final String description, final ILogGroup logGroup) {
         return PipelineProject.Builder.create(this, identity)
             .environment(BuildEnvironment.builder()
-                .buildImage(LinuxBuildImage.fromCodeBuildImageId(BUILD_IMAGE_ID))
+                .buildImage(LinuxArmBuildImage.fromCodeBuildImageId(BUILD_IMAGE_ID))
+                .computeType(ComputeType.SMALL)
                 .build())
             .timeout(Duration.minutes(15))
             .grantReportGroupPermissions(false)
@@ -219,7 +219,6 @@ public final class AcsCodePipelineCdkStack extends Stack {
             .concurrentBuildLimit(1)
             .queuedTimeout(Duration.minutes(5))
             .description(description)
-            .cache(Cache.local(LocalCacheMode.DOCKER_LAYER, LocalCacheMode.CUSTOM, LocalCacheMode.SOURCE))
             .logging(LoggingOptions.builder()
                 .cloudWatch(CloudWatchLoggingOptions.builder()
                     .logGroup(logGroup)

@@ -34,9 +34,3 @@ phases:
 artifacts:
   files:
     - '**/*'
-
-cache:
-  paths:
-    - '/root/.gradle/**/*'
-    - '/root/.npm/**/*'
-    - '/root/.cdk/**/*'
