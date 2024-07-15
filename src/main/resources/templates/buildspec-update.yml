@@ -4,16 +4,20 @@ env:
   variables:
     SAM_CLI_TELEMETRY: 0
     TZ: Australia/Sydney
+    NODE_NAME: node-v20.15.1-linux-arm64
     APP_CONFIG_GROUP_PREFIX: ${configGroupPrefix}
 
 phases:
   install:
-    runtime-versions:
-      java: corretto21.x
     commands:
-      - ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
-      - echo $TZ > /etc/timezone
       - date
+      - cd /tmp
+      - export NODE_FILE_NAME=$NODE_NAME.tar.gz
+      - wget -q https://nodejs.org/dist/v20.15.1/$NODE_FILE_NAME
+      - echo "8554c91ccd32782351035d3a9b168ad01c6922480800a21870fc5d6d86c2bb70  $NODE_FILE_NAME" > SHASUMS256.txt
+      - grep $NODE_FILE_NAME SHASUMS256.txt | sha256sum -c -
+      - tar -xf $NODE_FILE_NAME
+      - PATH="/tmp/$NODE_NAME/bin:$PATH"
       - npm install -g aws-cdk@2
 
   build:
