@@ -4,7 +4,7 @@ env:
   variables:
     SAM_CLI_TELEMETRY: 0
     TZ: Australia/Sydney
-    NODE_NAME: node-v20.15.1-linux-arm64
+    NODE_INSTALL_URL: https://nodejs.org/dist/latest-v20.x
     APP_CONFIG_GROUP_PREFIX: ${configGroupPrefix}
 
 phases:
@@ -12,11 +12,12 @@ phases:
     commands:
       - date
       - cd /tmp
-      - export NODE_FILE_NAME=$NODE_NAME.tar.gz
-      - wget -q https://nodejs.org/dist/v20.15.1/$NODE_FILE_NAME
-      - echo "8554c91ccd32782351035d3a9b168ad01c6922480800a21870fc5d6d86c2bb70  $NODE_FILE_NAME" > SHASUMS256.txt
+      - export NODE_FILE_NAME=$(curl -s $NODE_INSTALL_URL/ | grep 'linux-arm64.tar.gz' | awk -F '"' '{print $2}')
+      - wget -q $NODE_INSTALL_URL/$NODE_FILE_NAME
+      - wget -q $NODE_INSTALL_URL/SHASUMS256.txt
       - grep $NODE_FILE_NAME SHASUMS256.txt | sha256sum -c -
       - tar -xf $NODE_FILE_NAME
+      - export NODE_NAME=$(basename $NODE_FILE_NAME .tar.gz)
       - PATH="/tmp/$NODE_NAME/bin:$PATH"
       - npm install -g aws-cdk@2
 
